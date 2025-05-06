@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Text, ForeignKey, Enum as SQLEnum, Float, DateTime, func
+from sqlalchemy import Column, Integer, String, Text, ForeignKey, JSON, Enum as SQLEnum, Float, DateTime, func
 from sqlalchemy.orm import relationship, declarative_base
 from enum import Enum
 
@@ -14,7 +14,7 @@ class Debate(Base):
     id = Column(Integer, primary_key=True, index=True)
     topic = Column(String(255), nullable=False)
     mode = Column(SQLEnum(DebateModeEnum), nullable=False)
-    created_at = Column(DateTime, server_default=func.now())
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     arguments = relationship("Argument", back_populates="debate")
 
@@ -28,7 +28,7 @@ class Argument(Base):
     created_at = Column(DateTime, server_default=func.now())
 
     debate = relationship("Debate", back_populates="arguments")
-    score = relationship("Score", back_populates="argument", uselist=False)
+    score = relationship("Score", back_populates="argument", uselist=False, cascade="all, delete-orphan")
 
 class Score(Base):
     __tablename__ = "scores"
@@ -40,5 +40,8 @@ class Score(Base):
     bias = Column(Float)
     ethical_balance = Column(Float)
     total_score = Column(Float)
+    explanation = Column(Text)
+    nlp_insights = Column(JSON)
 
     argument = relationship("Argument", back_populates="score")
+

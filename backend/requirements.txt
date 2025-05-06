@@ -10,3 +10,4 @@ openai-whisper
 pyaudio
 keyboard
 imageio-ffmpeg
+transformers

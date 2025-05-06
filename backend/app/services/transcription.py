@@ -1,46 +1,22 @@
 import os
-import wave
-import whisper
 import imageio_ffmpeg
-import pyaudio
+import whisper
 
+# Make sure ffmpeg is on PATH for Whisper’s use
 ffmpeg_path = imageio_ffmpeg.get_ffmpeg_exe()
 os.environ["PATH"] += os.pathsep + os.path.dirname(ffmpeg_path)
 
-class AudioRecorder:
-    def __init__(self, filename="recorded_audio.wav", rate=16000):
-        self.filename = filename
-        self.format = pyaudio.paInt16
-        self.channels = 1
-        self.rate = rate
-        self.chunk = 1024
-        self.frames = []
-
-    def record_audio(self, duration_sec: int):
-        audio = pyaudio.PyAudio()
-        stream = audio.open(format=self.format, channels=self.channels,
-                            rate=self.rate, input=True, frames_per_buffer=self.chunk)
-
-        for _ in range(int(self.rate / self.chunk * duration_sec)):
-            data = stream.read(self.chunk)
-            self.frames.append(data)
-
-        stream.stop_stream()
-        stream.close()
-        audio.terminate()
-
-        with wave.open(self.filename, 'wb') as wf:
-            wf.setnchannels(self.channels)
-            wf.setsampwidth(audio.get_sample_size(self.format))
-            wf.setframerate(self.rate)
-            wf.writeframes(b''.join(self.frames))
-
-        return self.filename
-
 class WhisperTranscriber:
-    def __init__(self, model_size="medium"):
+    """
+    Wraps OpenAI Whisper for audio->text.
+    """
+    def __init__(self, model_size: str = "medium"):
         self.model = whisper.load_model(model_size)
 
-    def transcribe(self, audio_file: str) -> str:
-        result = self.model.transcribe(audio_file)
-        return result['text']
+    def transcribe(self, audio_path: str) -> str:
+        """
+        Transcribe the given audio file path to plain text.
+        """
+        result = self.model.transcribe(audio_path)
+        # strip leading/trailing whitespace
+        return result.get("text", "").strip()

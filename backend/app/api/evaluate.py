@@ -19,7 +19,11 @@ async def evaluate_argument_route(argument_id: int, db: AsyncSession = Depends(g
     if existing_score:
         return existing_score
 
-    score_data = await evaluate_argument(argument.text)
+    await db.refresh(argument, attribute_names=["debate"])
+    evaluation_result = await evaluate_argument(argument.text, argument.debate.topic)
+    score_data = evaluation_result["scores"]
+    explanation = evaluation_result["explanation"]
+    nlp = evaluation_result["nlp_insights"]
 
     db_score = models.Score(
         argument_id=argument.id,
@@ -27,7 +31,9 @@ async def evaluate_argument_route(argument_id: int, db: AsyncSession = Depends(g
         evidence_support=score_data["evidence_support"],
         bias=score_data["bias"],
         ethical_balance=score_data["ethical_balance"],
-        total_score=score_data["total_score"]
+        total_score=score_data["total_score"],
+        explanation=explanation,
+        nlp_insights = nlp
     )
 
     db.add(db_score)

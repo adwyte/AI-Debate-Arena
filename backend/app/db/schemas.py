@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Optional, List
+from typing import Optional, List, Dict, Any
 from datetime import datetime
 
 class ScoreBase(BaseModel):
@@ -15,9 +15,11 @@ class ScoreCreate(ScoreBase):
 class ScoreOut(ScoreBase):
     id: int
     argument_id: int
+    explanation: Optional[str] = None
+    nlp_insights: Optional[Dict[str, Any]]
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class ArgumentBase(BaseModel):
     speaker: str
@@ -32,7 +34,18 @@ class ArgumentOut(ArgumentBase):
     score: Optional[ScoreOut]
 
     class Config:
-        orm_mode = True
+        from_attributes = True
+
+
+class AIArgumentOut(BaseModel):
+    id: int
+    speaker: str
+    text: str
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
 
 class DebateBase(BaseModel):
     topic: str
@@ -47,4 +60,15 @@ class DebateOut(DebateBase):
     arguments: List[ArgumentOut] = []
 
     class Config:
-        orm_mode = True
+        from_attributes = True
+
+class LeaderboardEntry(BaseModel):
+    speaker: str
+    total_points: int
+
+class SpeakerHistoryEntry(BaseModel):
+    debate_id: int
+    topic: str
+    created_at: datetime
+    winner: str
+    my_points: int

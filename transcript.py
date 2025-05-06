@@ -7,7 +7,7 @@ os.environ["PATH"] += os.pathsep + os.path.dirname(ffmpeg_path)
 
 model = whisper.load_model("medium")
 result = model.transcribe("sample.mp4")
-#result = model.transcribe("sample.mp4")
+#result = model.transcribe("recorded-audio.mp3")
 
 transcription = result['text'].replace('. ', '.\n')
 print("Transcription:", transcription)

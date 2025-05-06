@@ -1,0 +1,21 @@
+body {
+  font-family: sans-serif;
+  margin: 0;
+  padding: 1rem;
+}
+header {
+  background: #282c34;
+  padding: 1rem;
+  color: white;
+}
+a {
+  color: #61dafb;
+  text-decoration: none;
+  margin-right: 1rem;
+}
+button {
+  margin: 0.25rem;
+}
+textarea {
+  width: 100%;
+}
