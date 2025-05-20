@@ -1,10 +1,14 @@
 from logging.config import fileConfig
 from sqlalchemy import engine_from_config, pool
 from alembic import context
+from dotenv import load_dotenv
 
+import os
 import sys
 
-sys.path.append(r"E:\Engineering\Artificial Intelligence\Debate Arena")
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
+
+load_dotenv()
 
 # Import your Base and models so Alembic knows them
 from backend.app.db.models import Base  # <-- Base from session.py
@@ -12,6 +16,10 @@ from backend.app.db import models  # ensures all models are loaded
 
 # Alembic Config
 config = context.config
+
+DATABASE_URL = os.getenv("DATABASE_URL")
+if DATABASE_URL:
+    config.set_main_option("sqlalchemy.url", DATABASE_URL)
 
 # Logging setup
 if config.config_file_name is not None:

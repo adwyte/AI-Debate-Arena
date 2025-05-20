@@ -6,6 +6,9 @@ from backend.app.api.argument   import router as argument_router
 from backend.app.api.evaluate   import router as evaluate_router
 from backend.app.api.transcribe import router as transcribe_router
 from backend.app.api.leaderboard import router as leaderboard_router
+from dotenv import load_dotenv
+
+load_dotenv()
 
 app = FastAPI()
 

@@ -1,3 +1,4 @@
+import os
 import httpx
 import json
 import re
@@ -6,7 +7,7 @@ import asyncio
 from typing import Any, Dict
 from transformers import pipeline, Pipeline
 
-GROQ_API_KEY = "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"
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions"
 MODEL_NAME   = "llama3-8b-8192"   # or "mistral-8x7b-32768"
 
