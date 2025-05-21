@@ -1,4 +1,5 @@
 import logging
+import os
 import asyncio
 from typing import Any, Dict, List
 
@@ -10,9 +11,12 @@ from sqlalchemy.future import select
 from ..db import models
 from .evaluation import evaluate_argument
 
+from dotenv import load_dotenv
+load_dotenv()
+
 # ——— Configuration ——————————————————————————————————————————————————————
-GROQ_API_KEY    = "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"
-GROQ_API_URL    = "https://api.groq.com/openai/v1/chat/completions"
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions"
 MODEL_NAME      = "llama3-8b-8192"
 NUM_CANDIDATES  = 2      # generate two candidates
 

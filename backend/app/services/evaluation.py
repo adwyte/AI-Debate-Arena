@@ -6,6 +6,8 @@ import logging
 import asyncio
 from typing import Any, Dict
 from transformers import pipeline, Pipeline
+from dotenv import load_dotenv
+load_dotenv()
 
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions"
@@ -116,6 +118,11 @@ async def evaluate_argument(text: str, topic: str) -> Dict[str, Any]:
     3) Extracts Explanation
     4) Adds NLP insight labels
     """
+
+    import os
+    print("GROQ API KEY:", os.getenv("GROQ_API_KEY"))
+
+
     # 1) Build the system message with topic
     prompt = SYSTEM_PROMPT.format(topic=topic)
 
