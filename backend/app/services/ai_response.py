@@ -17,7 +17,7 @@ load_dotenv()
 # ——— Configuration ——————————————————————————————————————————————————————
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions"
-MODEL_NAME      = "llama3-8b-8192"
+MODEL_NAME      = "llama-3.3-70b-versatile"
 NUM_CANDIDATES  = 2      # generate two candidates
 
 # ——— Rubric-driven system prompt ——————————————————————————————————————————

@@ -6,7 +6,7 @@ export default function AboutPage() {
     <Box sx={{ maxWidth: 800, mx: 'auto', px: 3, py: 6 }}>
       {/* Cyan‐accented main heading */}
       <Typography variant="h4" color="primary.main" gutterBottom>
-        PASSION AI Debate Arena
+        AI Debate Arena
       </Typography>
 
       <Divider sx={{ mb: 3 }} />
@@ -23,8 +23,7 @@ export default function AboutPage() {
         Team
       </Typography>
       <List sx={{ pl: 4, '& .MuiListItem-root': { display: 'list-item', py: 0 } }}>
-        <ListItem>SY AIML A7 – AI Course Project Group</ListItem>
-        <ListItem>PASSION Infotech – Industry Project Sponsor</ListItem>
+        <ListItem>TY AIML A8 – Software Engineering Course Project</ListItem>
       </List>
 
       {/* Tech Stack */}
