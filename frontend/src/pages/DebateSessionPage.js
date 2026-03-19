@@ -34,12 +34,16 @@ export default function DebateSessionPage() {
   const [turn, setTurn]   = useState(0);      // index into speakers[]
   const [text, setText]   = useState('');
   const [args, setArgs]   = useState([]);
+  const [loading, setLoading] = useState(false);
 
   if (isLoading) return <CircularProgress />;
   if (error)     return <Alert severity="error">Failed to load debate</Alert>;
 
-  // 2. Called for both text and speech submissions
+  // 2. Called for both text and speech
   const handleSubmit = async (argumentText) => {
+    if (loading) return;
+    setLoading(true);
+
     const speaker = speakers[turn];
 
     try {
@@ -52,17 +56,18 @@ export default function DebateSessionPage() {
 
       setArgs(a => [...a, arg]);
 
-      // b) evaluate it immediately
+      // b) send to Kafka (via evaluate API)
       await api.post(`/evaluate/${arg.id}`);
 
-      // c) if AI-vs-Human, get AI rebuttal and eval that too
+      // c) AI-vs-Human
       if (mode === 'ai_vs_human') {
         const { data: aiArg } = await api.post(
           `/debates/${id}/ai_response/${arg.id}`
         );
+
         setArgs(a => [...a, aiArg]);
-        await api.post(`/evaluate/${aiArg.id}`);
-        // stay on human’s turn
+
+        // Kafka will handle it automatically
       } else {
         // swap turn for 1v1
         setTurn(t => (t + 1) % 2);
@@ -71,10 +76,11 @@ export default function DebateSessionPage() {
     } catch (e) {
       console.error(e);
       alert('Error saving or evaluating argument:\n' + (e.response?.data?.detail || e.message));
-    }
-
+    } finally {
+    setLoading(false);
     setText('');
-  };
+  }
+};
 
   return (
     <Stack spacing={4}>
@@ -108,9 +114,9 @@ export default function DebateSessionPage() {
             <Button
               variant="contained"
               onClick={() => handleSubmit(text)}
-              disabled={!text.trim()}
+              disabled={!text.trim() || loading}
             >
-              Submit Argument
+              {loading ? "Submitting..." : "Submit Argument"}
             </Button>
 
             <TranscribeButton

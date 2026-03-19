@@ -41,6 +41,7 @@ class Score(Base):
     ethical_balance = Column(Float)
     total_score = Column(Float)
     explanation = Column(Text)
+    stance = Column(String, nullable=True)
     nlp_insights = Column(JSON)
 
     argument = relationship("Argument", back_populates="score")

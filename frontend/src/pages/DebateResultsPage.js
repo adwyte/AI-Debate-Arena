@@ -127,7 +127,6 @@ export default function DebateResultsPage() {
                       sx={{ fontStyle: 'italic', ml: 2 }}
                     >
                       Sentiment: <strong>{arg.score.nlp_insights.sentiment}</strong> │{' '}
-                      Emotion:  <strong>{arg.score.nlp_insights.emotion}</strong> │{' '}
                       Tone:     <strong>{arg.score.nlp_insights.tone.join(', ')}</strong>
                     </Typography>
                   </>

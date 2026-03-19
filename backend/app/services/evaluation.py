@@ -6,6 +6,7 @@ import logging
 import asyncio
 from typing import Any, Dict
 from transformers import pipeline, Pipeline
+from .ai_response import detect_stance
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -65,51 +66,89 @@ async def _load_pipelines():
                 model="facebook/bart-large-mnli"
             )
 
-async def analyze_nlp_insights(text: str) -> Dict[str, Any]:
+async def llm_nlp_analysis(text: str):
+    prompt = f"""
+    Analyze the following argument:
+
+    {text}
+
+    Return JSON:
+    {{
+        "sentiment": "positive/negative/neutral",
+        "tone": ["formal", "informal", "aggressive", "analytical", "persuasive"]
+    }}
     """
-    Run three pipelines, truncating inputs,
-    and return only labels for sentiment, emotion, tone.
-    """
-    await _load_pipelines()
-    loop = asyncio.get_event_loop()
-    insights: Dict[str, Any] = {}
 
-    # Sentiment
     try:
-        def do_sentiment():
-            return _sentiment_pipe(text, truncation=True, max_length=512)[0]
-        raw = await loop.run_in_executor(None, do_sentiment)
-        insights["sentiment"] = raw.get("label")
-    except Exception as e:
-        logger.error("Sentiment analysis failed: %s", e)
-        insights["sentiment"] = None
+        resp = await _async_client.post(
+            GROQ_API_URL,
+            headers={
+                "Authorization": f"Bearer {GROQ_API_KEY}",
+                "Content-Type": "application/json",
+            },
+            json={
+                "model": MODEL_NAME,
+                "messages": [{"role": "user", "content": prompt}],
+                "temperature": 0
+            }
+        )
+        resp.raise_for_status()
+        raw = resp.json()["choices"][0]["message"]["content"]
 
-    # Emotion
-    try:
-        def do_emotion():
-            return _emotion_pipe(text, truncation=True, max_length=512, top_k=None)[0]
-        raw = await loop.run_in_executor(None, do_emotion)
-        insights["emotion"] = raw.get("label")
-    except Exception as e:
-        logger.error("Emotion analysis failed: %s", e)
-        insights["emotion"] = None
+        import json, re
+        match = re.search(r"\{.*\}", raw, re.DOTALL)
+        return json.loads(match.group()) if match else {}
 
-    # Tone (zero-shot)
-    try:
-        def do_tone():
-            return _tone_pipe(
-                text,
-                candidate_labels=["formal","informal","sarcastic","humorous","serious"],
-                truncation=True,
-                max_length=512
-            )
-        tone_out = await loop.run_in_executor(None, do_tone)
-        insights["tone"] = tone_out.get("labels", [])[:5]
     except Exception as e:
-        logger.error("Tone analysis failed: %s", e)
-        insights["tone"] = []
+        logger.error("NLP LLM failed: %s", e)
+        return {"sentiment": None, "tone": []}
 
-    return insights
+
+# async def analyze_nlp_insights(text: str) -> Dict[str, Any]:
+#     """
+#     Run three pipelines, truncating inputs,
+#     and return only labels for sentiment, emotion, tone.
+#     """
+#     await _load_pipelines()
+#     loop = asyncio.get_event_loop()
+#     insights: Dict[str, Any] = {}
+#
+#     # Sentiment
+#     try:
+#         def do_sentiment():
+#             return _sentiment_pipe(text, truncation=True, max_length=512)[0]
+#         raw = await loop.run_in_executor(None, do_sentiment)
+#         insights["sentiment"] = raw.get("label")
+#     except Exception as e:
+#         logger.error("Sentiment analysis failed: %s", e)
+#         insights["sentiment"] = None
+#
+#     # Emotion
+#     try:
+#         def do_emotion():
+#             return _emotion_pipe(text, truncation=True, max_length=512, top_k=None)[0]
+#         raw = await loop.run_in_executor(None, do_emotion)
+#         insights["emotion"] = raw.get("label")
+#     except Exception as e:
+#         logger.error("Emotion analysis failed: %s", e)
+#         insights["emotion"] = None
+#
+#     # Tone (zero-shot)
+#     try:
+#         def do_tone():
+#             return _tone_pipe(
+#                 text,
+#                 candidate_labels=["formal","informal","sarcastic","humorous","serious"],
+#                 truncation=True,
+#                 max_length=512
+#             )
+#         tone_out = await loop.run_in_executor(None, do_tone)
+#         insights["tone"] = tone_out.get("labels", [])[:5]
+#     except Exception as e:
+#         logger.error("Tone analysis failed: %s", e)
+#         insights["tone"] = []
+#
+#     return insights
 
 async def evaluate_argument(text: str, topic: str) -> Dict[str, Any]:
     """
@@ -118,10 +157,6 @@ async def evaluate_argument(text: str, topic: str) -> Dict[str, Any]:
     3) Extracts Explanation
     4) Adds NLP insight labels
     """
-
-    import os
-    print("GROQ API KEY:", os.getenv("GROQ_API_KEY"))
-
 
     # 1) Build the system message with topic
     prompt = SYSTEM_PROMPT.format(topic=topic)
@@ -166,13 +201,14 @@ async def evaluate_argument(text: str, topic: str) -> Dict[str, Any]:
     # 5) Extract explanation
     explanation = raw.replace(match.group(), "", 1).strip()
 
-    result = {"scores": scores, "explanation": explanation}
+    stance = await detect_stance(text, topic)
+
+    result = {"scores": scores, "explanation": explanation, "stance": stance}
 
     # 6) NLP insights
     try:
-        result["nlp_insights"] = await analyze_nlp_insights(text)
-    except Exception as e:
-        logger.error("NLP insights failed: %s", e)
+        result["nlp_insights"] = await llm_nlp_analysis(text)
+    except:
         result["nlp_insights"] = {"sentiment":None,"emotion":None,"tone":[]}
 
     return result

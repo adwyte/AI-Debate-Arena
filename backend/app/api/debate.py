@@ -90,9 +90,9 @@ async def ai_response_route(
     persist it, and return just the new AI Argument record (id, speaker, text, created_at).
     """
     try:
-        result = await create_ai_response(db, debate_id, argument_id)
+        ai_arg = await create_ai_response(db, debate_id, argument_id)
     except ValueError as e:
         # e.g. argument not found in this debate
         raise HTTPException(status_code=404, detail=str(e))
 
-    return result["argument"]
+    return ai_arg
